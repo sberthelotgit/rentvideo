@@ -3,7 +3,7 @@ const express = require('express');
 const Joi = require('joi');
 
 
-let listMovies = [{
+const listMovies = [{
     id: 1,
     name: 'Best Horror Movie',
     genre: 'Horror',
@@ -30,18 +30,15 @@ app.get(apiUrl + ':id', (req, res) => {
     const movie = listMovies.find(c => {
         return c.id === parseInt(req.params.id);
     });
-    if (!movie) {
-        return res.status(404).send(`Movie with id ${req.params.id} not found`);
-    }
+    if (!movie) return res.status(404).send(`Movie with id ${req.params.id} not found`);
     res.send(movie);
 });
 
 // Post a movie (name require and should be longer that 2)
 app.post(apiUrl, (req, res) => {
-    const result = Joi.validate(req.body, schema);
-    if (result.error) {
-        return res.status(400).send(result.error.message);
-    }
+    const {error} = Joi.validate(req.body, schema);
+    if (error) return res.status(400).send(error.message);
+
 
     const newMovie = {
         id: listMovies.length + 1,
@@ -58,20 +55,26 @@ app.put(apiUrl + ':id', (req, res) => {
     const movie = listMovies.find(c => {
         return c.id === parseInt(req.params.id);
     });
-    if (!movie) {
-        return res.status(404).send(`Movie with id ${req.params.id} not found`);
-    }
-    const result = Joi.validate(req.body, schema);
-    if (result.error) {
-        return res.status(400).send(result.error.message);
-    }
-    if (req.body.name) {
-        movie.name = req.body.name;
-    }
-    if (req.body.genre) {
-        movie.genre = req.body.genre;
-    }
+    if (!movie) return res.status(404).send(`Movie with id ${req.params.id} not found`);
+
+    const {error} = Joi.validate(req.body, schema);
+    if (error) return res.status(400).send(error.message);
+
+    movie.name = req.body.name;
+    movie.genre = req.body.genre;
     res.send(movie);
+});
+
+// Remove a movie from the store
+app.delete(apiUrl + ':id', (req, res) =>{
+    const movie = listMovies.find(c => {
+        return c.id === parseInt(req.params.id);
+    });
+    if (!movie) return res.status(404).send(`Movie with id ${req.params.id} not found`);
+
+    const index = listMovies.indexOf(movie);
+    listMovies.splice(index, 1);
+    res.status(200).send();
 });
 
 
