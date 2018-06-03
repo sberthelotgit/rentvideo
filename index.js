@@ -1,90 +1,15 @@
 'use strict';
 const express = require('express');
-const Joi = require('joi');
-
-
-const listMovies = [{
-    id: 1,
-    name: 'Best Horror Movie',
-    genre: 'Horror',
-}];
+const movies = require('./routes/movies');
+const home = require('./routes/home');
 
 const app = express();
 app.use(express.json());
-
-const apiUrl = '/api/movies/';
-
-// Get home
-app.get('/', (req, res) => {
-    res.send(`Welcome to movie rental website<br/> 
-        Use following path to access the api : ${apiUrl}`);
-});
-
-// Get all movie
-app.get(apiUrl, (req, res) => {
-    res.send(listMovies);
-});
-
-// Get movie by ID
-app.get(apiUrl + ':id', (req, res) => {
-    const movie = listMovies.find(c => {
-        return c.id === parseInt(req.params.id);
-    });
-    if (!movie) return res.status(404).send(`Movie with id ${req.params.id} not found`);
-    res.send(movie);
-});
-
-// Post a movie (name require and should be longer that 2)
-app.post(apiUrl, (req, res) => {
-    const {error} = Joi.validate(req.body, schema);
-    if (error) return res.status(400).send(error.message);
-
-
-    const newMovie = {
-        id: listMovies.length + 1,
-        name: req.body.name,
-        genre: req.body.genre,
-    };
-
-    listMovies.push(newMovie);
-    res.send(newMovie);
-});
-
-// Update movie by ID
-app.put(apiUrl + ':id', (req, res) => {
-    const movie = listMovies.find(c => {
-        return c.id === parseInt(req.params.id);
-    });
-    if (!movie) return res.status(404).send(`Movie with id ${req.params.id} not found`);
-
-    const {error} = Joi.validate(req.body, schema);
-    if (error) return res.status(400).send(error.message);
-
-    movie.name = req.body.name;
-    movie.genre = req.body.genre;
-    res.send(movie);
-});
-
-// Remove a movie from the store
-app.delete(apiUrl + ':id', (req, res) =>{
-    const movie = listMovies.find(c => {
-        return c.id === parseInt(req.params.id);
-    });
-    if (!movie) return res.status(404).send(`Movie with id ${req.params.id} not found`);
-
-    const index = listMovies.indexOf(movie);
-    listMovies.splice(index, 1);
-    res.status(200).send();
-});
-
+app.use('/api/movies', movies);
+app.use('/', home);
 
 // Starting listening
-app.listen(4000, () => {
-    console.log('Listening on port 4000');
+const port = process.env.PORT || 4000;
+app.listen(port, () => {
+    console.log(`Listening on port ${port}`);
 });
-
-// Schema for post and put validation
-const schema = {
-    name: Joi.string().min(3).required(),
-    genre: Joi.string(),
-};
